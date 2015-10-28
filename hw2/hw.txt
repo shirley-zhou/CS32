@@ -1,0 +1,10 @@
+2.	First 12 (r,c) coordinates popped off the stack: (6,4), (6,3), (6,5), (7,5), (8,5), (8, 6), (8,7), (8,8), (7,8), (6,6), (5,4), (4,4)
+
+4.	First 12 (r,c) coordinates popped off the queue: (6,4), (5,4), (6,5), (6,3), (4,4), (6,6), (7,5), (3,4), (4,5), (8,5), (2,4), (4,6)
+	
+	Starting from each coordinates, the algorithms both search 4 directions clockwise from north to determine possible open paths.
+	Next, the stack algorithm will continue searching down the last discovered open direction, while the queue algorithm will continue searching starting from the first
+	open path found. This is repeated for each coordinate visited. The difference comes from the fact that the stack will set the current coordinate as the last one found, 
+	while the queue sets the current coordinate popped as the first one found.
+
+

@@ -1,0 +1,398 @@
+1. 	I designed my doubly-linked list to always have a dummy node as the first node. The head points to the dummy node, which is constructed even for an empty list.
+	The list is also circular, with the last node pointing back to the dummy node. There is no tail pointer. Each node contains a value, a counter of the value, a pointer to 
+	the previous node, and a pointer to the next node. The nodes are in the order they are inserted, since each new node is inserted at the end.
+	Empty:                 head----------> +------------+
+			+-----------	| (dummy)	| ------------+     (prev points to self, next points to self)
+			|	|	|	|
+			+---------->	+-----------+ <----------+
+
+	Non-Empty:         head---------> 	+-----------+	+-------------+
+			+------------	| (dummy)	| ---------->	| First node |  <------+
+			|       +---->	|	|  <----------	|	  | -----+   |
+			|        |	+-----------+  	+-------------+        |   |
+                                                        |       +--------------------------------------------------------+  |
+			+-----------------------------------------------------------------+
+
+2.	Pseudocode:
+	void combine(const Multiset& ms1, const Multiset& ms2, Multiset& result)
+	{
+		first, set the result multiset to ms1 (assignment operator)
+		repeatedly loop through nodes of ms2
+			for each value in ms2, loop through all iterations of value
+				call insert function to insert value into result multiset
+	}
+
+	void subtract(const Multiset& ms1, const Multiset& ms2, Multiset& result)
+	{
+		in case of aliasing (problem if result = ms2), make a copy of ms2 to use for rest of the function
+
+		first, set the result multiset to ms1 (assignment operator)
+		loop through nodes of result
+			loop through nodes of ms2 copy
+				check if value in current node of result multiset match value in each node of ms2 copy
+					if the count in result is greater than the count in ms2 copy (for current value)
+						erase the number of iterations in ms2 copy from the result mutliset
+					otherwise, if count in result multiset is greater than or equal to the count in ms2 copy
+						delete the entire node from result
+						decrement loop cursor to prevent skipping a node (since a node was deleted)
+					break; (because value match was found)
+	}
+	
+	Multiset::Multiset()
+	{
+		dynamically allocate a new dummy node
+		set next and previous pointers to refer to self
+	}
+	
+	Multiset::Multiset(const Multiset& other)
+	{
+		dynamically allocate new dummy node
+		loop through other linked list
+			insert values into new list the correct number of times
+	}
+	
+	bool Multiset::insert(const ItemType& value)
+	{
+		loop through list to search for value
+		if return to head of list (value not found)
+			dynamically allocate new node
+			set value and count
+			update next and previous pointers
+			increment uniqueSize
+		otherwise,
+			increment counter of node where value was found
+		increment list size
+		return true always
+	}
+
+	int Multiset::erase(const ItemType& value)
+	{
+		loop through list to search for value
+		if end up at head of list (value not found)
+			return 0 items erased
+		if value found and count = 1
+			reset pointers and delete entire node
+			decrement uniqueSize
+		otherwise,
+			decrement value count
+		decrement array size
+		return 1 item erased
+	}
+
+	int Multiset::eraseAll(const ItemType& value)
+	{
+		loop through list to search for value
+		if end up at head of list (value not found)
+			return 0 items erased
+		(otherwise)
+		adjust pointers to connect previous with next
+		subtract from list size the count in current node
+		decrement uniqueSize
+		delete node
+		return the count that was subtracted
+	}
+
+3. Test Cases:
+
+//Test for strings:
+
+Multiset a; 					//default constructor
+a.insert("This"); 					//insert
+a.insert("is");
+a.insert("a");
+a.insert("test");
+a.insert("test");
+//a: This, is, a, test, test
+
+assert(a.size() == 5 && a.uniqueSize() == 4); 		//test size
+cout << "Test a: This, is, a, test, test" << endl;
+for (int k = 0; k < a.uniqueSize(); k++)			//print list
+    {
+        string x;
+        int n = a.get(k, x);
+        cout << x << " occurs " << n << " times." << endl;
+    }
+
+Multiset b;					//empty multiset
+//empty
+
+assert(b.size() == 0 && b.uniqueSize() == 0);		//size
+assert(b.count("hi") == 0 && b.contains("hi") == false); //test count and contains
+cout << "Test b: (empty)" << endl;
+for (int k = 0; k < b.uniqueSize(); k++)			//nothing to print
+   {
+        string x = "empty";
+        int n = b.get(k, x);
+        cout << x << " occurs " << n << " times." << endl;
+    }
+
+						//test copy empty
+Multiset d = b;
+assert(d.size() == 0 && d.uniqueSize() == 0);
+assert(d.count("hi") == 0 && d.contains("hi") == false);
+
+Multiset c=a; 					//copy
+assert(c.size() == 5 && c.uniqueSize() == 4);
+c.insert("hi");
+//c: This, is, a, test, test, hi
+
+assert(c.size() == 6 && c.uniqueSize() == 5);
+						//print c, print a (inserting in c does not affect a)
+cout << "Test c: This, is, a, test, test, hi" << endl;
+for (int k = 0; k < c.uniqueSize(); k++)
+	{
+        string x;
+        int n = c.get(k, x);
+        cout << x << " occurs " << n << " times." << endl;
+    }
+cout << "Changing c does not change a: This, is, a, test, test" << endl;
+for (int k = 0; k < a.uniqueSize(); k++)
+	{
+        string x;
+        int n = a.get(k, x);
+        cout << x << " occurs " << n << " times." << endl;
+    }
+
+//test swap:
+b.swap(a);
+cout << "Test: a should be empty" << endl;		//test swap: a is now empty
+for (int k = 0; k < a.uniqueSize(); k++)			//nothing to print
+	{
+        string x = "empty";
+        int n = a.get(k, x);
+        cout << x << " occurs " << n << " times." << endl;
+    }
+cout << "Test b: This, is, a, test, test" << endl;		//print b (now contains stuff from a)
+for (int k = 0; k < b.uniqueSize(); k++)
+	{
+        string x = "empty";
+        int n = b.get(k, x);
+        cout << x << " occurs " << n << " times." << endl;
+    }
+assert(a.size() == 0 && a.uniqueSize() == 0 && b.size() == 5 && b.uniqueSize() == 4);
+b.swap(a);					//swap back
+
+b=a; 						//assignment
+b.insert("a");
+b.insert("!!!");
+//b: This, is, a, a, test, test, !!!
+
+cout << "Test b: This, is, a, a, test, test, !!!" << endl;
+for (int k = 0; k < b.uniqueSize(); k++)			//print b with new values inserted
+	{
+        string x = "empty";
+        int n = b.get(k, x);
+        cout << x << " occurs " << n << " times." << endl;
+    }
+assert(a.contains("!!!") == false); 			//changing b does not affect a (even though b was assigned from a)
+
+						//test count:
+assert(a.count("This") == 1);
+assert(a.count("test") == 2);
+assert( a.count("hi") == 0);
+
+						//test contains:
+assert(a.contains("This"));
+assert(a.contains("test"));
+assert(!a.contains("hi"));
+
+						//test get:
+ItemType x = "hi";
+assert(b.get(-1, x) == 0 && x == "hi"); 			//negative number
+assert(b.get(10, x) == 0 && x == "hi"); 			//exceed size
+
+						//test erase:
+assert(a.erase("test") == 1);				 //decrement
+assert(a.size() == 4 && a.uniqueSize() == 4 && a.count("test") == 1);
+assert(a.erase("is") == 1); 				//remove middle
+assert(a.size() == 3 && a.uniqueSize() == 3 && a.count("is") == 0);
+assert(a.erase("This") == 1); 				//remove beginning
+assert(a.size() == 2 && a.uniqueSize() == 2 && a.count("This") == 0);
+assert(a.erase("test") == 1); 				//remove end
+assert(a.size() == 1 && a.uniqueSize() == 1 && a.count("test") == 0);
+assert(a.erase("hi") == 0); 				//not found, check vars after
+
+cout << endl << endl << "B: ";
+for (int k = 0; k < b.uniqueSize(); k++)			//print b again after erasing values
+   {
+        string x = "empty";
+        int n = b.get(k, x);
+        cout << x << " occurs " << n << " times." << endl;
+    }
+
+						//test eraseAll:
+assert(b.eraseAll("hi") == 0); 				//not found
+assert(b.size() == 7 && b.uniqueSize() == 5 && b.count("hi") == 0);
+assert(b.eraseAll("This") == 1); 			//remove beginning
+assert(b.size() == 6 && b.uniqueSize() == 4 && b.count("This") == 0);
+assert(b.eraseAll("test") == 2); 				//remove middle
+assert(b.size() == 4 && b.uniqueSize() == 3 && b.count("test") == 0);
+assert(b.eraseAll("!!!")); 				//remove end
+assert(b.size() == 3 && b.uniqueSize() == 2 && b.count("!!!") == 0);
+
+----------------------------------------------------------
+//Test for unsigned long:
+
+						//test combine:
+	cout << "TEST COMBINE FUNCT" << endl;
+	Multiset m1;
+	m1.insert(2);
+	m1.insert(2);
+	m1.insert(2);
+	m1.insert(8);
+	m1.insert(3);
+	m1.insert(3);
+	m1.insert(9);
+	m1.insert(5);
+	//m1: 2 2 2 8 3 3 9 5
+
+	Multiset m2;
+	m2.insert(6);
+	m2.insert(3);
+	m2.insert(8);
+	m2.insert(8);
+	m2.insert(5);
+	m2.insert(10);
+	//m2: 6 3 8 8 5 10
+
+						//test combine with empty result1
+	Multiset result1;
+	combine(m1, m2, result1);
+	assert(result1.size() == 14 && result1.uniqueSize() == 7);
+	cout << "Result1" << endl;
+	for (int k = 0; k < result1.uniqueSize(); k++)	//print
+	{
+       		 ItemType x = 0;
+       		 int n = result1.get(k, x);
+        		cout << x << " occurs " << n << " times." << endl;
+   	 }
+
+						//test combine with non-empty result2
+	Multiset result2;
+	result2.insert(100);
+	result2.insert(200);
+	result2.insert(300);
+	result2.insert(400);
+	result2.insert(500);
+	result2.insert(600);
+	combine(m1, m2, result2);
+	assert(result2.size() == 14 && result2.uniqueSize() == 7); //check size
+	cout << "Result2" << endl;
+	for (int k = 0; k < result2.uniqueSize(); k++)
+	{
+     		ItemType x = 0;
+       		int n = result2.get(k, x);
+        		cout << x << " occurs " << n << " times." << endl;
+    	}
+
+						//test combine with empty m_1, m_2
+	Multiset m_1;
+	Multiset m_2;
+	combine(m_1, m_2, result2);
+	assert(result2.size() == 0 && result2.uniqueSize() == 0);
+	cout << "Result2.2" << endl;
+	for (int k = 0; k < result2.uniqueSize(); k++)
+	{
+       		ItemType x = 0;
+        		int n = result2.get(k, x);
+        		cout << x << " occurs " << n << " times." << endl;
+    	}
+
+						//test combine with ms1 = ms2
+	m1 = m2;
+	//both: 2 2 2 8 3 3 9 5
+	combine(m1, m2, result1);
+	assert( result1.size() == 16 && result1.uniqueSize() == 5) //result should contain double everything
+
+	cout << endl;
+
+	//----------------------------
+						//test subtract
+	cout << "TEST SUBTRACT FUNCT" << endl;
+
+	m_1.insert(2);
+	m_1.insert(2);
+	m_1.insert(2);
+	m_1.insert(8);
+	m_1.insert(3);
+	m_1.insert(3);
+	m_1.insert(9);
+	m_1.insert(5);
+	//m_1: 2 2 2 8 3 3 9 5
+
+	m_2.insert(6);
+	m_2.insert(3);
+	m_2.insert(8);
+	m_2.insert(8);
+	m_2.insert(5);
+	m_2.insert(10);
+	//m_2: 6 3 8 8 5 10
+
+						//test with empty result3
+	Multiset result3;
+	subtract(m1, m2, result3);
+	assert(result3.size() == 5 && result3.uniqueSize() == 3);
+	cout << "Result1" << endl;
+	for (int k = 0; k < result3.uniqueSize(); k++)
+	{
+        		ItemType x = 0;
+        		int n = result3.get(k, x);
+       		 cout << x << " occurs " << n << " times." << endl;
+    	}
+
+						//test with non-empty result1
+	subtract(m1, m2, result1);
+	assert(result1.size() == 5 && result1.uniqueSize() == 3);
+	cout << "Result1" << endl;
+	for (int k = 0; k < result1.uniqueSize(); k++)
+	{
+        		ItemType x = 0;
+        		int n = result1.get(k, x);
+        		cout << x << " occurs " << n << " times." << endl;
+    	}
+
+						//test with m1=m2
+	subtract(m1, m2, result1);
+	assert(result1.size() == 0 && result1.uniqueSize() == 0);
+
+						//test with ms1 = result (aliasing)
+	subtract(m_1, m_2, m_1);
+	assert(m_1.size() == 5 && m_1.uniqueSize() == 3);
+	cout << "Aliasing1" << endl;
+	for (int k = 0; k < m_1.uniqueSize(); k++)
+	{
+        		ItemType x = 0;
+        		int n = m_1.get(k, x);
+        		cout << x << " occurs " << n << " times." << endl;
+    	}
+
+	Multiset m_11;
+	m_11.insert(2);
+	m_11.insert(2);
+	m_11.insert(2);
+	m_11.insert(8);
+	m_11.insert(3);
+	m_11.insert(3);
+	m_11.insert(9);
+	m_11.insert(5);
+	//m_11: 2 2 2 8 3 3 9 5
+
+	Multiset m_22;
+	m_22.insert(6);
+	m_22.insert(3);
+	m_22.insert(8);
+	m_22.insert(8);
+	m_22.insert(5);
+	m_22.insert(10);
+	//m_22: 6 3 8 8 5 10
+
+						//test with ms2=result (aliasing)
+	subtract(m_11, m_22, m_22);
+	assert(m_22.size() == 5 && m_22.uniqueSize() == 3);
+	cout << "Aliasing2" << endl;
+	for (int k = 0; k < m_22.uniqueSize(); k++)
+	{
+        		ItemType x = 0;
+        		int n = m_22.get(k, x);
+        		cout << x << " occurs " << n << " times." << endl;
+    	}
